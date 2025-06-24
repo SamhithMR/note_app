@@ -134,7 +134,7 @@ app.get("/get-user", authenticateToken, async (req, res) => {
 });
 
 app.post("/add-note", authenticateToken, async (req, res) => {
-  const { title, content, tags } = req.body;
+  const { title, content } = req.body;
   const { user } = req.user;
 
   if (!title) {
@@ -151,7 +151,6 @@ app.post("/add-note", authenticateToken, async (req, res) => {
     const note = new Note({
       title,
       content,
-      tags: tags || [],
       userId: user._id,
     });
 
@@ -185,10 +184,10 @@ app.get("/get-all-notes/", authenticateToken, async (req, res) => {
 
 app.put("/edit-note/:noteId", authenticateToken, async (req, res) => {
   const noteId = req.params.noteId;
-  const { title, content, tags, isPinned } = req.body;
+  const { title, content, isPinned } = req.body;
   const { user } = req.user;
 
-  if (!title && !content && !tags) {
+  if (!title && !content) {
     return res
       .status(400)
       .json({ error: true, message: "No changes provided" });
@@ -206,7 +205,6 @@ app.put("/edit-note/:noteId", authenticateToken, async (req, res) => {
 
     if (title) note.title = title;
     if (content) note.content = content;
-    if (tags) note.tags = tags;
     if (isPinned) note.isPinned = isPinned;
 
     await note.save();
