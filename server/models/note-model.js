@@ -11,10 +11,6 @@ const noteSchema = new Schema({
     type: String,
     required: true,
   },
-  tags: {
-    type: [String],
-    default: [],
-  },
   isPinned: {
     type: Boolean,
     default: false,
@@ -26,6 +22,14 @@ const noteSchema = new Schema({
   createdOn: {
     type: Date,
     default: new Date().getTime(),
+  },
+  x: { 
+    type: Number, 
+    default: 0 
+  },
+  y: { 
+    type: Number, 
+    default: 0 
   },
 });
 

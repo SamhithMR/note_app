@@ -8,18 +8,38 @@ const AddEditNotes = ({
   onClose,
   getAllNotes,
   showTokenMessage,
+  allNotes
 }) => {
   const [title, setTitle] = useState(noteData?.title || "");
   const [content, setContent] = useState(noteData?.content || "");
-
   const [error, setError] = useState(null);
 
-  // Add Note
   const addNewNote = async () => {
     try {
+
+      let defaultX = 10;
+      let defaultY = 10;
+      if (allNotes && allNotes.length > 0) {
+        const sortedNotes = [...allNotes].sort((a, b) => a.x - b.x);
+        const lastNote = sortedNotes[sortedNotes.length - 1];
+
+        const NOTE_WIDTH = 220;
+        const MAX_X = 800; 
+
+        defaultX = lastNote.x + NOTE_WIDTH;
+        defaultY = lastNote.y;
+
+        if (defaultX > MAX_X) {
+          defaultX = 10;
+          defaultY += 250;
+        }
+      }
+
       const response = await axiosInstance.post("/add-note", {
         title,
         content,
+        x: defaultX,
+        y: defaultY
       });
       if (response.data && response.data.note) {
         showTokenMessage("Note Added Successfully");

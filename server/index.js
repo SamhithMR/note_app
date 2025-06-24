@@ -134,7 +134,7 @@ app.get("/get-user", authenticateToken, async (req, res) => {
 });
 
 app.post("/add-note", authenticateToken, async (req, res) => {
-  const { title, content } = req.body;
+  const { title, content, x, y } = req.body;
   const { user } = req.user;
 
   if (!title) {
@@ -152,6 +152,8 @@ app.post("/add-note", authenticateToken, async (req, res) => {
       title,
       content,
       userId: user._id,
+      x,
+      y
     });
 
     await note.save();
@@ -216,6 +218,42 @@ app.put("/edit-note/:noteId", authenticateToken, async (req, res) => {
     });
   } catch (error) {
 
+    return res
+      .status(500)
+      .json({ error: true, message: "Internal Server Error" });
+  }
+});
+
+app.put("/update-note-position/:noteId", authenticateToken, async (req, res) => {
+  const noteId = req.params.noteId;
+  const { x, y } = req.body;
+  const { user } = req.user;
+
+  if (x === undefined || y === undefined) {
+    return res.status(400).json({ error: true, message: "Position data required" });
+  }
+
+  try {
+    const note = await Note.findOne({
+      _id: noteId,
+      userId: user._id,
+    });
+
+    
+    if (!note) {
+      return res.status(404).json({ error: true, message: "Note not found" });
+    }
+    note.x = x;
+    note.y = y;
+
+    await note.save();
+
+    return res.json({
+      error: false,
+      note,
+      message: "Note position updated successfully",
+    });
+  } catch (error) {
     return res
       .status(500)
       .json({ error: true, message: "Internal Server Error" });

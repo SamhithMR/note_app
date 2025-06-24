@@ -9,6 +9,7 @@ import Toast from "../../components/ToastMessage/Toast";
 import EmptyCard from "../../components/EmptyCard/EmptyCard";
 import AddNoteImg from "../../assets/images/add-note.svg";
 import NoDataImg from "../../assets/images/no-data.svg";
+import Draggable from "react-draggable";
 
 const Home = () => {
   const [openAddEditModal, setOpenAddEditModal] = useState({
@@ -163,6 +164,30 @@ const Home = () => {
     }
   }, [isLoggedIn]);
 
+  const handleDragStop = async (noteId, data) => {
+    const updatedNotes = allNotes.map(note => {
+      if (note._id === noteId) {
+        return {
+          ...note,
+          x: data.x,
+          y: data.y,
+        };
+      }
+      return note;
+    });
+    setAllNotes(updatedNotes);
+
+    try {
+      await axiosInstance.put(`/update-note-position/${noteId}`, {
+        x: data.x,
+        y: data.y,
+      });
+    } catch (error) {
+      console.log("Failed to update position", error);
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="sticky top-0 z-10 bg-white shadow">
@@ -176,18 +201,25 @@ const Home = () => {
       <main className="container mx-auto px-4 py-5">
         {isLoggedIn ? (
           allNotes.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="relative w-full h-full bg-red-200">
               {allNotes.map((item) => (
-                <NoteCard
+                <Draggable
                   key={item._id}
-                  title={item.title}
-                  date={item.createdOn}
-                  content={item.content}
-                  isPinned={item.isPinned}
-                  onEdit={() => handleEdit(item)}
-                  onDelete={() => deleteNote(item)}
-                  onPinNote={() => updateIsPinned(item)}
-                />
+                  defaultPosition={{ x: item.x || 0, y: item.y || 0 }}
+                  onStop={(e, data) => handleDragStop(item._id, data)}
+                >
+                  <div className="absolute">
+                    <NoteCard
+                      title={item.title}
+                      date={item.createdOn}
+                      content={item.content}
+                      isPinned={item.isPinned}
+                      onEdit={() => handleEdit(item)}
+                      onDelete={() => deleteNote(item)}
+                      onPinNote={() => updateIsPinned(item)}
+                    />
+                  </div>
+                </Draggable>
               ))}
             </div>
           ) : (
@@ -252,6 +284,7 @@ const Home = () => {
           }}
           getAllNotes={getAllNotes}
           showTokenMessage={showTokenMessage}
+          allNotes={allNotes}
         />
       </Modal>
 
