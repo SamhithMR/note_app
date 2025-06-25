@@ -119,28 +119,6 @@ const Home = () => {
     }
   };
 
-  const updateIsPinned = async (noteData) => {
-    if (!isLoggedIn) {
-      alert("Please log in to pin notes.");
-      return;
-    }
-    const noteId = noteData._id;
-    try {
-      const response = await axiosInstance.put(
-        `/update-note-pinned/${noteId}`,
-        {
-          isPinned: !noteData.isPinned,
-        }
-      );
-      if (response.data && response.data.note) {
-        showTokenMessage("Note Update Successfully");
-        getAllNotes();
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const handleClearSearch = () => {
     setIsSearch(false);
     getAllNotes();
@@ -213,10 +191,8 @@ const Home = () => {
                       title={item.title}
                       date={item.createdOn}
                       content={item.content}
-                      isPinned={item.isPinned}
                       onEdit={() => handleEdit(item)}
                       onDelete={() => deleteNote(item)}
-                      onPinNote={() => updateIsPinned(item)}
                     />
                   </div>
                 </Draggable>
@@ -271,7 +247,7 @@ const Home = () => {
             border: "none",
             borderRadius: "0.5rem",
             maxWidth: "90%",
-            width: "600px",
+            width: "800px",
           },
         }}
         contentLabel="Add/Edit Note"
