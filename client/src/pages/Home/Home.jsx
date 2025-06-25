@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
-import NoteCard from "../../components/Cards/NoteCard";
 import { MdAdd } from "react-icons/md";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
@@ -9,7 +8,19 @@ import Toast from "../../components/ToastMessage/Toast";
 import EmptyCard from "../../components/EmptyCard/EmptyCard";
 import AddNoteImg from "../../assets/images/add-note.svg";
 import NoDataImg from "../../assets/images/no-data.svg";
-import Draggable from "react-draggable";
+
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+} from "reactflow";
+import "reactflow/dist/style.css";
+import NoteNode from "../../components/Cards/NoteNode";
+
+const nodeTypes = {
+  noteNode: NoteNode,
+};
+
 
 const Home = () => {
   const [openAddEditModal, setOpenAddEditModal] = useState({
@@ -27,6 +38,18 @@ const Home = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [isSearch, setIsSearch] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const nodes = allNotes.map((note) => ({
+    id: note._id,
+    type: "noteNode",
+    position: { x: note.x || 0, y: note.y || 0 },
+    data: {
+      ...note,
+      onEdit: () => handleEdit(note),
+      onDelete: () => deleteNote(note),
+    },
+  }));
+
 
   const handleEdit = (noteDetails) => {
     if (!isLoggedIn) {
@@ -142,26 +165,20 @@ const Home = () => {
     }
   }, [isLoggedIn]);
 
-  const handleDragStop = async (noteId, data) => {
-    const updatedNotes = allNotes.map(note => {
-      if (note._id === noteId) {
-        return {
-          ...note,
-          x: data.x,
-          y: data.y,
-        };
-      }
-      return note;
-    });
+  const handleDragStop = async (noteId, position) => {
+    
+    const updatedNotes = allNotes.map(note =>
+      note._id === noteId ? { ...note, x: position.x, y: position.y } : note
+    );
     setAllNotes(updatedNotes);
 
     try {
       await axiosInstance.put(`/update-note-position/${noteId}`, {
-        x: data.x,
-        y: data.y,
+        x: position.x,
+        y: position.y,
       });
-    } catch (error) {
-      console.log("Failed to update position", error);
+    } catch (err) {
+      console.error("Error updating position", err);
     }
   };
 
@@ -176,28 +193,23 @@ const Home = () => {
         />
       </div>
 
-      <main className="container mx-auto px-4 py-5">
+      <main className="p-4 mx-auto">
         {isLoggedIn ? (
           allNotes.length > 0 ? (
-            <div className="relative w-full h-full bg-red-200">
-              {allNotes.map((item) => (
-                <Draggable
-                  key={item._id}
-                  defaultPosition={{ x: item.x || 0, y: item.y || 0 }}
-                  onStop={(e, data) => handleDragStop(item._id, data)}
-                >
-                  <div className="absolute">
-                    <NoteCard
-                      title={item.title}
-                      date={item.createdOn}
-                      content={item.content}
-                      onEdit={() => handleEdit(item)}
-                      onDelete={() => deleteNote(item)}
-                    />
-                  </div>
-                </Draggable>
-              ))}
+            <div className="w-full h-[90vh] rounded-md border bg-white">
+              <ReactFlow
+                nodes={nodes}
+                edges={[]}
+                nodeTypes={nodeTypes}
+                fitView
+                onNodeDragStop={(event, node) => handleDragStop(node.id, node.position)}
+              >
+                <MiniMap />
+                <Controls />
+                <Background />
+              </ReactFlow>
             </div>
+
           ) : (
             <div className="flex justify-center items-center h-fit">
               <EmptyCard

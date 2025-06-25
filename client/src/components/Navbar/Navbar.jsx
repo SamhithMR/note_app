@@ -33,7 +33,7 @@ const Navbar = ({ userInfo, onSearchNotes, handleClearSearch }) => {
       </div>
 
       {userInfo && (
-        <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end">
+        <div className="flex-1 flex justify-center px-2 lg:ml-6">
           <div className="max-w-lg w-full lg:max-w-xs">
             <label htmlFor="search" className="sr-only">
               Search
