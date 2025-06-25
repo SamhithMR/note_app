@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
-import { MdAdd } from "react-icons/md";
+import { MdAdd, MdVisibility } from "react-icons/md";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
+import ViewNote from "./ViewNote"; // New import for view modal component
 import axiosInstance from "../../utils/axiosInstance";
 import Toast from "../../components/ToastMessage/Toast";
 import EmptyCard from "../../components/EmptyCard/EmptyCard";
@@ -28,6 +29,10 @@ const Home = () => {
     type: "add",
     data: null,
   });
+  const [openViewModal, setOpenViewModal] = useState({
+    isShown: false,
+    data: null,
+  });
 
   const [showTokenMsg, setShowTokenMsg] = useState({
     isShown: false,
@@ -46,6 +51,7 @@ const Home = () => {
     data: {
       ...note,
       onEdit: () => handleEdit(note),
+      onView: () => handleView(note),
       onDelete: () => deleteNote(note),
     },
   }));
@@ -57,6 +63,14 @@ const Home = () => {
       return;
     }
     setOpenAddEditModal({ isShown: true, data: noteDetails, type: "edit" });
+  };
+
+  const handleView = (noteDetails) => {
+    if (!isLoggedIn) {
+      alert("Please log in to edit notes.");
+      return;
+    }
+    setOpenViewModal({ isShown: true, data: noteDetails });
   };
 
   const showTokenMessage = (message, type) => {
@@ -77,7 +91,7 @@ const Home = () => {
   // Get user Info
   const getUserInfo = async () => {
     try {
-      const response = await axiosInstance.get("/get-user");
+      const response = await axiosInstance.get("api/auth/get-user");
       if (response.data && response.data.user) {
         setUserInfo(response.data.user);
         setIsLoggedIn(true);
@@ -93,7 +107,7 @@ const Home = () => {
   const getAllNotes = async () => {
     if (!isLoggedIn) return;
     try {
-      const response = await axiosInstance.get("/get-all-notes");
+      const response = await axiosInstance.get("/api/notes");
       if (response.data && response.data.notes) {
         setAllNotes(response.data.notes);
       }
@@ -110,7 +124,7 @@ const Home = () => {
     }
     const noteId = data._id;
     try {
-      const response = await axiosInstance.delete(`/delete-note/${noteId}`);
+      const response = await axiosInstance.delete(`api/notes/${noteId}`);
       if (response.data && !response.data.error) {
         showTokenMessage("Note Deleted Successfully", "delete");
         getAllNotes();
@@ -130,7 +144,7 @@ const Home = () => {
   const onSearchNotes = async (query) => {
     if (!isLoggedIn) return;
     try {
-      const response = await axiosInstance.get("/search-notes", {
+      const response = await axiosInstance.get("api/notes/search", {
         params: { query },
       });
       if (response.data && response.data.notes) {
@@ -173,7 +187,7 @@ const Home = () => {
     setAllNotes(updatedNotes);
 
     try {
-      await axiosInstance.put(`/update-note-position/${noteId}`, {
+      await axiosInstance.put(`api/notes/position/${noteId}`, {
         x: position.x,
         y: position.y,
       });
@@ -273,6 +287,39 @@ const Home = () => {
           getAllNotes={getAllNotes}
           showTokenMessage={showTokenMessage}
           allNotes={allNotes}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={openViewModal.isShown}
+        onRequestClose={() => {
+          setOpenViewModal({ isShown: false, data: null });
+        }}
+        style={{
+          overlay: {
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+          },
+          content: {
+            top: "55%",
+            left: "50%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
+            padding: "0",
+            border: "none",
+            borderRadius: "0.5rem",
+            maxWidth: "90%",
+            width: "800px",
+          },
+        }}
+        contentLabel="View Note"
+      >
+        <ViewNote
+          noteData={openViewModal.data}
+          onClose={() => {
+            setOpenViewModal({ isShown: false, data: null });
+          }}
         />
       </Modal>
 

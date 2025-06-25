@@ -9,6 +9,7 @@ const NoteNode = ({ data }) => {
         date={data.createdOn}
         content={data.content}
         onEdit={data.onEdit}
+        onView={data.onView}
         onDelete={data.onDelete}
       />
       

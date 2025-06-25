@@ -95,7 +95,7 @@ const AddEditNotes = ({
         }
       }
 
-      const response = await axiosInstance.post("/add-note", {
+      const response = await axiosInstance.post("/", {
         title,
         content,
         x: defaultX,
@@ -120,7 +120,7 @@ const AddEditNotes = ({
   const editNote = async () => {
     const noteId = noteData._id;
     try {
-      const response = await axiosInstance.put(`/edit-note/${noteId}`, {
+      const response = await axiosInstance.put(`api/notes/${noteId}`, {
         title,
         content
       });
@@ -167,7 +167,7 @@ const AddEditNotes = ({
     setHasInteracted(true);
 
     try {
-      const res = await axiosInstance.post(`/ai-enhance`, {
+      const res = await axiosInstance.post(`/api/ai/enhance`, {
         type,
         content,
         title,
