@@ -1,4 +1,3 @@
-import { Handle } from "reactflow";
 import NoteCard from "../Cards/NoteCard";
 
 const NoteNode = ({ data }) => {
@@ -13,8 +12,6 @@ const NoteNode = ({ data }) => {
         onDelete={data.onDelete}
       />
       
-      <Handle type="source" position="right" />
-      <Handle type="target" position="left" />
     </div>
   );
 };

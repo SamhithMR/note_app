@@ -3,7 +3,7 @@ import Navbar from "../../components/Navbar/Navbar";
 import { MdAdd, MdVisibility } from "react-icons/md";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
-import ViewNote from "./ViewNote"; // New import for view modal component
+import ViewNote from "./ViewNote";
 import axiosInstance from "../../utils/axiosInstance";
 import Toast from "../../components/ToastMessage/Toast";
 import EmptyCard from "../../components/EmptyCard/EmptyCard";
@@ -17,6 +17,11 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import NoteNode from "../../components/Cards/NoteNode";
+
+import { io } from "socket.io-client";
+import { useRef } from "react";
+
+const socket = io("http://localhost:3000");
 
 const nodeTypes = {
   noteNode: NoteNode,
@@ -105,9 +110,11 @@ const Home = () => {
   };
 
   const getAllNotes = async () => {
+
+    console.log("called")
     if (!isLoggedIn) return;
     try {
-      const response = await axiosInstance.get("/api/notes");
+      const response = await axiosInstance.get("api/notes/");
       if (response.data && response.data.notes) {
         setAllNotes(response.data.notes);
       }
@@ -127,6 +134,7 @@ const Home = () => {
       const response = await axiosInstance.delete(`api/notes/${noteId}`);
       if (response.data && !response.data.error) {
         showTokenMessage("Note Deleted Successfully", "delete");
+        socket.emit("note-deleted", noteId);
         getAllNotes();
       }
     } catch (error) {
@@ -140,7 +148,6 @@ const Home = () => {
     }
   };
 
-  // Search For Notes
   const onSearchNotes = async (query) => {
     if (!isLoggedIn) return;
     try {
@@ -171,6 +178,23 @@ const Home = () => {
 
   useEffect(() => {
     getUserInfo();
+    socket.on("note-updated-from-server", (updatedNotes) => {
+      setAllNotes((prevNotes) =>
+      prevNotes.map((note) =>
+        note._id === updatedNotes._id ? { ...note, ...updatedNotes } : note
+      )
+    );
+    });
+
+    socket.on("note-deleted-from-server", (noteId) => {
+      setAllNotes((prevNotes) => prevNotes.filter((note) => note._id !== noteId));
+    });
+
+    return () => {
+      socket.off("note-updated-from-server");
+      socket.off("note-deleted-from-server");
+    };
+
   }, []);
 
   useEffect(() => {
@@ -180,7 +204,13 @@ const Home = () => {
   }, [isLoggedIn]);
 
   const handleDragStop = async (noteId, position) => {
-    
+
+    socket.emit("note-updated", {
+      _id: noteId,
+      x: position.x,
+      y: position.y
+    });
+
     const updatedNotes = allNotes.map(note =>
       note._id === noteId ? { ...note, x: position.x, y: position.y } : note
     );
@@ -287,6 +317,7 @@ const Home = () => {
           getAllNotes={getAllNotes}
           showTokenMessage={showTokenMessage}
           allNotes={allNotes}
+          socket={socket}
         />
       </Modal>
 

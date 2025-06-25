@@ -21,6 +21,28 @@ app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/ai", aiRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+const http = require("http");
+const { Server } = require("socket.io");
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"]
+  }
+});
+
+io.on("connection", (socket) => {
+  socket.on("note-updated", (note) => {
+    console.log(note)
+    socket.broadcast.emit("note-updated-from-server", note);
+  });
+
+  socket.on("note-deleted", (noteId) => {
+    socket.broadcast.emit("note-deleted-from-server", noteId);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`server is running`);
 });

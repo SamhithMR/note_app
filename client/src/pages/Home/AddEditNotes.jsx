@@ -7,50 +7,10 @@ import { TbReplace } from "react-icons/tb";
 
 function TypingSkeleton() {
   return (
-    <div className="typing-dots">
-      <span></span>
-      <span></span>
-      <span></span>
-      <style jsx>{`
-        .typing-dots {
-          display: flex;
-          align-items: center;
-          justify-content: start;
-          height: 35px;
-          padding: 0 10px;
-          gap: 8px;
-        }
-
-        .typing-dots span {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background-color: #555;
-          opacity: 0.3;
-          animation: bounce 1.2s infinite ease-in-out;
-        }
-
-        .typing-dots span:nth-child(1) {
-          animation-delay: 0s;
-        }
-        .typing-dots span:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-        .typing-dots span:nth-child(3) {
-          animation-delay: 0.4s;
-        }
-
-        @keyframes bounce {
-          0%, 80%, 100% {
-            transform: scale(0.8);
-            opacity: 0.3;
-          }
-          40% {
-            transform: scale(1.4);
-            opacity: 1;
-          }
-        }
-      `}</style>
+    <div className="flex items-center justify-start h-[35px] px-2.5 gap-2">
+      <span className="w-3 h-3 rounded-full bg-gray-700 opacity-30 animate-bounce" style={{ animationDelay: "0ms" }}></span>
+      <span className="w-3 h-3 rounded-full bg-gray-700 opacity-30 animate-bounce" style={{ animationDelay: "200ms" }}></span>
+      <span className="w-3 h-3 rounded-full bg-gray-700 opacity-30 animate-bounce" style={{ animationDelay: "400ms" }}></span>
     </div>
   );
 }
@@ -62,7 +22,8 @@ const AddEditNotes = ({
   onClose,
   getAllNotes,
   showTokenMessage,
-  allNotes
+  allNotes,
+  socket
 }) => {
   const [title, setTitle] = useState(noteData?.title || "");
   const [content, setContent] = useState(noteData?.content || "");
@@ -95,7 +56,7 @@ const AddEditNotes = ({
         }
       }
 
-      const response = await axiosInstance.post("/", {
+      const response = await axiosInstance.post("/api/notes", {
         title,
         content,
         x: defaultX,
@@ -126,6 +87,7 @@ const AddEditNotes = ({
       });
       if (response.data && response.data.note) {
         showTokenMessage("Note Update Successfully");
+        socket.emit("note-updated", response.data.note);
         getAllNotes();
         onClose();
       }
@@ -221,14 +183,26 @@ const AddEditNotes = ({
         </div>
 
         <div className="flex justify-center gap-4 flex-wrap mb-4">
-          <button onClick={() => handleAIEnhancement("improve")} className="ai-btn">
-            <AiOutlineEdit className="mr-2" /> Fix Grammar
+          <button
+            onClick={() => handleAIEnhancement("improve")}
+            className="flex items-center text-indigo-600 border border-indigo-600 font-semibold px-4 py-2 rounded-lg transition-all duration-300 hover:bg-indigo-600 hover:text-white"
+          >
+            <AiOutlineEdit className="mr-2" />
+            Fix Grammar
           </button>
-          <button onClick={() => handleAIEnhancement("summarize")} className="ai-btn">
-            <AiOutlineHighlight className="mr-2" /> Summarize
+          <button
+            onClick={() => handleAIEnhancement("summarize")}
+            className="flex items-center text-indigo-600 border border-indigo-600 font-semibold px-4 py-2 rounded-lg transition-all duration-300 hover:bg-indigo-600 hover:text-white"
+          >
+            <AiOutlineHighlight className="mr-2" />
+            Summarize
           </button>
-          <button onClick={() => handleAIEnhancement("expand")} className="ai-btn">
-            <AiOutlineExpandAlt className="mr-2" /> Add More Details
+          <button
+            onClick={() => handleAIEnhancement("expand")}
+            className="flex items-center text-indigo-600 border border-indigo-600 font-semibold px-4 py-2 rounded-lg transition-all duration-300 hover:bg-indigo-600 hover:text-white"
+          >
+            <AiOutlineExpandAlt className="mr-2" />
+            Add More Details
           </button>
         </div>
 
@@ -255,14 +229,11 @@ const AddEditNotes = ({
 
         {hasInteracted && (
           <div className="relative m-4 bg-gray-100 p-4 rounded-md min-h-[100px]">
-            {/* Top-right buttons */}
             {!loading && (
               <div className="absolute top-2 right-2 flex gap-2">
-                {/* Copy Button */}
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(result);
-                    // Optionally show toast/alert
                   }}
                   title="Copy to Clipboard"
                   className="text-blue-600 hover:text-blue-800 p-1 rounded transition-colors"
@@ -270,7 +241,6 @@ const AddEditNotes = ({
                   <AiOutlineCopy size={20} />
                 </button>
 
-                {/* Set as Note Content */}
                 <button
                   onClick={() => setContent(result)}
                   title="Set as Note Content"
@@ -284,7 +254,6 @@ const AddEditNotes = ({
               </div>
             )}
 
-            {/* Result Content */}
             {loading ? (
               <TypingSkeleton />
             ) : (
@@ -295,23 +264,6 @@ const AddEditNotes = ({
 
 
         <style jsx>{`
-        .ai-btn {
-          display: flex;
-          align-items: center;
-          background-color: transparent;
-          color: #4f46e5;
-          padding: 0.5rem 1rem;
-          border: 1px solid #4f46e5;
-          border-radius: 0.5rem;
-          font-weight: 600;
-          transition: all 0.3s;
-        }
-
-        .ai-btn:hover {
-          background-color: #4f46e5;
-          color: white;
-        }
-
         textarea:disabled {
           opacity: 0.6;
         }
