@@ -10,8 +10,16 @@ const aiRoutes = require("./routes/ai.routes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const corsOptions = {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 connectDb();
-app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 app.get("/", (req, res) => res.send("Server running..."));
