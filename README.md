@@ -6,16 +6,16 @@ An AI-powered full-stack note-taking application featuring a draggable interacti
 ## Features
 
 - **Interactive Canvas**: Drag and position notes freely; positions persist between sessions.
-- **Real-time Updates**: Notes and positions sync instantly.
 - **User Authentication**: Secure login and sign-up system
-- **AI Enhancements**: Improve grammar, generate summaries, and expand note content using AI.
+- **AI Enhancements**: Improve grammar, generate summaries, expand note content and custom prompt by users using AI.
+- **Real-time Updates**: Notes and positions sync instantly using sockets.
+- **Note Management**:
+  - Create notes with title and content
+  - Update and delete existing notes
 - **Dashboard**: 
   - Navigation bar with app name, search functionality, and user profile
   - Note display area
   - Add note button (bottom right)
-- **Note Management**:
-  - Create notes with title and content
-  - Update and delete existing notes
 - **Responsive Design**: Optimized for various screen sizes
 - **Note Management**: Create, update, delete notes with title and content.
 - **Responsive UI**: Built with React and React Flow for a clean, intuitive experience.
@@ -28,6 +28,7 @@ To run this project, you will need to add the following environment variables to
 ### Backend
     MONGODB_URI=your_mongodb_connection_string
     ACCESS_TOKEN_SECRET=your_backend_api_url
+    OPENROUTER_API_KEY=your opnerouter api key
 
 ### Frontend
     VITE_BASE_URL=your_backend_api_url
@@ -46,6 +47,8 @@ To run this project, you will need to add the following environment variables to
 
 ### Frontend
 - React.js
+- TailwindCSS
+- Context API
 - React Router for navigation
 - Axios for API requests
 - Moment.js for date formatting
@@ -58,15 +61,6 @@ To run this project, you will need to add the following environment variables to
 ### Database
 - MongoDB
 
-## Tech Stack
-
-**Client:** React, Redux, TailwindCSS
-
-**Server:** Node, Express
-
-**Database:** MongoDB
-
-
 
 ## Installation
 
@@ -74,7 +68,7 @@ To run this project, you will need to add the following environment variables to
 ```bash
 git clone git@github.com:SamhithMR/note_app.git && cd notes-app
 ```
-2. Install backend dependencies:
+2. Install server dependencies:
 ```bash
 cd server && npm install
 ```
@@ -84,17 +78,24 @@ cd ../client && npm install
 ```
 
 4. Set up environment variables:
-- Create a `.env` file in the backend directory
-- Add necessary environment variables (e.g., MongoDB URI, JWT secret)
+- Create a `.env` file in the server directory and add environment variables
+- Create a `.env` file in the client directory and add environment variables
 
 ## Usage
 
 1. Start the backend server:
 ```bash
-cd backend && npm start
+cd server && npm start
 ```
 2. In a new terminal, start the frontend development server:
 ```bash
-cd frontend && npm run dev
+cd client && npm run dev
 ```
 3. Open your browser and navigate to `http://localhost:5173` (or the port specified by your React app)
+
+
+## reference images
+
+![authentication screen](./screenshots/authentication_screen.png)
+![Ai Powered add/edit model](./screenshots/edit_model.png)
+![Dashboard screen](./screenshots/dashboard.png)

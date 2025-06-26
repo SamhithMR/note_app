@@ -4,6 +4,7 @@ import axiosInstance from "../../utils/axiosInstance";
 import { AiOutlineEdit, AiOutlineExpandAlt, AiOutlineHighlight, AiOutlineCopy } from "react-icons/ai";
 import { FiSend } from "react-icons/fi";
 import { TbReplace } from "react-icons/tb";
+import { useNotes } from "../../context/NotesContext";
 
 function TypingSkeleton() {
   return (
@@ -20,11 +21,11 @@ const AddEditNotes = ({
   noteData,
   type,
   onClose,
-  getAllNotes,
-  showTokenMessage,
-  allNotes,
-  socket
+  showTokenMessage
 }) => {
+
+  const { getAllNotes, allNotes, socket } = useNotes();
+
   const [title, setTitle] = useState(noteData?.title || "");
   const [content, setContent] = useState(noteData?.content || "");
   const [error, setError] = useState(null);
@@ -135,6 +136,8 @@ const AddEditNotes = ({
         title,
         userPrompt: type === "custom" ? userPrompt : undefined,
       });
+
+      console.log({res})
 
       setResult(res.data.result || "No result returned.");
     } catch (error) {

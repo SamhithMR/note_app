@@ -9,6 +9,7 @@ import Toast from "../../components/ToastMessage/Toast";
 import EmptyCard from "../../components/EmptyCard/EmptyCard";
 import AddNoteImg from "../../assets/images/add-note.svg";
 import NoDataImg from "../../assets/images/no-data.svg";
+import { useNotes } from "../../context/NotesContext";
 
 import ReactFlow, {
   Background,
@@ -17,11 +18,6 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import NoteNode from "../../components/Cards/NoteNode";
-
-import { io } from "socket.io-client";
-import { useRef } from "react";
-
-const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 
 const nodeTypes = {
   noteNode: NoteNode,
@@ -44,10 +40,8 @@ const Home = () => {
     message: "",
     type: "add",
   });
-  const [allNotes, setAllNotes] = useState([]);
-  const [userInfo, setUserInfo] = useState(null);
+  const { allNotes, setAllNotes, getAllNotes, userInfo, isLoggedIn, getUserInfo, socket } = useNotes();
   const [isSearch, setIsSearch] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const nodes = allNotes.map((note) => ({
     id: note._id,
@@ -93,37 +87,7 @@ const Home = () => {
     });
   };
 
-  // Get user Info
-  const getUserInfo = async () => {
-    try {
-      const response = await axiosInstance.get("api/auth/get-user");
-      if (response.data && response.data.user) {
-        setUserInfo(response.data.user);
-        setIsLoggedIn(true);
-      }
-    } catch (error) {
-      setIsLoggedIn(false);
-      if (error.response && error.response.status === 401) {
-        localStorage.clear();
-      }
-    }
-  };
 
-  const getAllNotes = async () => {
-
-    console.log("called")
-    if (!isLoggedIn) return;
-    try {
-      const response = await axiosInstance.get("api/notes/");
-      if (response.data && response.data.notes) {
-        setAllNotes(response.data.notes);
-      }
-    } catch (error) {
-      console.log("An unexpected error occurred. Please try again.");
-    }
-  };
-
-  // Delete Notes
   const deleteNote = async (data) => {
     if (!isLoggedIn) {
       alert("Please log in to delete notes.");
@@ -180,10 +144,10 @@ const Home = () => {
     getUserInfo();
     socket.on("note-updated-from-server", (updatedNotes) => {
       setAllNotes((prevNotes) =>
-      prevNotes.map((note) =>
-        note._id === updatedNotes._id ? { ...note, ...updatedNotes } : note
-      )
-    );
+        prevNotes.map((note) =>
+          note._id === updatedNotes._id ? { ...note, ...updatedNotes } : note
+        )
+      );
     });
 
     socket.on("note-deleted-from-server", (noteId) => {
@@ -200,6 +164,7 @@ const Home = () => {
   useEffect(() => {
     if (isLoggedIn) {
       getAllNotes();
+      getUserInfo()
     }
   }, [isLoggedIn]);
 
@@ -314,10 +279,7 @@ const Home = () => {
           onClose={() => {
             setOpenAddEditModal({ isShown: false, type: "add", data: null });
           }}
-          getAllNotes={getAllNotes}
           showTokenMessage={showTokenMessage}
-          allNotes={allNotes}
-          socket={socket}
         />
       </Modal>
 

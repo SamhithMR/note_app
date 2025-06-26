@@ -15,7 +15,9 @@ exports.enhanceNote = async (req, res) => {
     return res.status(400).json({ error: true, message: "Invalid enhancement type." });
   }
 
-  const prompt = type === "custom" ? templateFn(title, content, userPrompt) : templateFn(title, content);
+  const prompt = type === "custom"
+    ? templateFn(title, content, userPrompt)
+    : templateFn(title, content);
 
   try {
     const aiResponse = await axios.post(
@@ -29,7 +31,7 @@ exports.enhanceNote = async (req, res) => {
       },
       {
         headers: {
-          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
         },
       }
@@ -40,21 +42,35 @@ exports.enhanceNote = async (req, res) => {
       return res.status(500).json({ error: true, message: "AI returned no response." });
     }
 
+    console.log({ resultRaw });
+
     let parsedResult;
     try {
-      parsedResult = JSON.parse(resultRaw);
+      const match = resultRaw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      const jsonString = match ? match[1] : resultRaw;
+      parsedResult = JSON.parse(jsonString);
     } catch (e) {
       console.error("Failed to parse AI JSON:", resultRaw);
       return res.status(500).json({ error: true, message: "AI response not in expected JSON format." });
     }
 
-    const keyMap = {
-      summarize: "summary",
-      improve: "content",
-      expand: "expanded",
-      custom: "content",
-    };
-    const finalContent = parsedResult?.[keyMap[type]];
+    let finalContent;
+
+    
+    if (type === "custom") {
+      const keys = Object.keys(parsedResult || {});
+      if (keys.length === 0) {
+        return res.status(500).json({ error: true, message: "Missing content in custom AI response." });
+      }      
+      finalContent = parsedResult[keys[1]];
+    } else {
+      const keyMap = {
+        summarize: "summary",
+        improve: "content",
+        expand: "expanded",
+      };
+      finalContent = parsedResult?.[keyMap[type]];
+    }
 
     if (!finalContent) {
       return res.status(500).json({ error: true, message: "Missing expected content in AI response." });
@@ -66,7 +82,11 @@ exports.enhanceNote = async (req, res) => {
       message: "AI enhancement successful.",
     });
   } catch (err) {
-    console.error("AI Enhance Error:", err.message);
-    return res.status(500).json({ error: true, message: "Server error while processing enhancement." });
+    console.error("AI Enhance Error:", err.message || err);
+    return res.status(500).json({
+      error: true,
+      message: "Server error while processing enhancement.",
+    });
   }
 };
+
